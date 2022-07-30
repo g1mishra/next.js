@@ -8,9 +8,11 @@ import Layout from '../../components/layout'
 import { getPostBySlug, getAllPosts } from '../../lib/api'
 import PostTitle from '../../components/post-title'
 import Head from 'next/head'
-import { CMS_NAME } from '../../lib/constants'
+import { API_EDNPOINT, CMS_NAME } from '../../lib/constants'
 import markdownToHtml from '../../lib/markdownToHtml'
 import type PostType from '../../interfaces/post'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 
 type Props = {
   post: PostType
@@ -20,6 +22,24 @@ type Props = {
 
 export default function Post({ post, morePosts, preview }: Props) {
   const router = useRouter()
+  const [fetchedData, setFetchedData] = useState()
+
+  // if post contains isAlbumData
+  useEffect(() => {
+    if (fetchedData || !post?.isAlbumData) return
+    axios.get(
+      `${API_EDNPOINT}/users/1/albums`
+    ).then(
+      (res) => {
+        setFetchedData(res?.data);
+      }, (err) => {
+        console.error(err);
+      }
+    ).catch((err) => {
+      console.error(err);
+    })
+  }, [post?.isAlbumData])
+
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
   }
@@ -44,7 +64,7 @@ export default function Post({ post, morePosts, preview }: Props) {
                 date={post.date}
                 author={post.author}
               />
-              <PostBody content={post.content} />
+              <PostBody content={post.content} albums={fetchedData} />
             </article>
           </>
         )}
@@ -68,6 +88,7 @@ export async function getStaticProps({ params }: Params) {
     'content',
     'ogImage',
     'coverImage',
+    'isAlbumData'
   ])
   const content = await markdownToHtml(post.content || '')
 

@@ -7,6 +7,7 @@ type PostType = {
   coverImage: string
   author: Author
   excerpt: string
+  isAlbumData: Boolean
   ogImage: {
     url: string
   }
